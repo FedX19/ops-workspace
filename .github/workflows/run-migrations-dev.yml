@@ -14,14 +14,22 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v4
+
       - name: Install psql
         run: sudo apt-get update && sudo apt-get install -y postgresql-client
-      - name: Run migrations via psql
+
+      - name: Run migrations via psql (pooler)
         env:
-          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          SUPABASE_POOLER_URL: ${{ secrets.SUPABASE_POOLER_URL }}
         run: |
-          set -e
-          for f in migrations/*_create_*.sql migrations/000_enable_pgcrypto.sql; do
+          set -euo pipefail
+
+          # Always enable pgcrypto first
+          echo "Applying migrations/000_enable_pgcrypto.sql"
+          psql "$SUPABASE_POOLER_URL" -v ON_ERROR_STOP=1 -f "migrations/000_enable_pgcrypto.sql"
+
+          # Then apply create scripts in sorted order
+          for f in $(ls -1 migrations/*_create_*.sql | sort); do
             echo "Applying $f"
-            psql "$SUPABASE_DB_URL" -f "$f"
+            psql "$SUPABASE_POOLER_URL" -v ON_ERROR_STOP=1 -f "$f"
           done
