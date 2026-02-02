@@ -12,24 +12,27 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+
     steps:
       - uses: actions/checkout@v4
 
       - name: Install psql
         run: sudo apt-get update && sudo apt-get install -y postgresql-client
 
-      - name: Run migrations via psql (pooler)
+      - name: Run migrations via psql (shared pooler, discrete vars)
         env:
-          SUPABASE_POOLER_URL: ${{ secrets.SUPABASE_POOLER_URL }}
+          PGHOST: ${{ secrets.SUPABASE_PGHOST }}
+          PGPORT: ${{ secrets.SUPABASE_PGPORT }}
+          PGUSER: ${{ secrets.SUPABASE_PGUSER }}
+          PGPASSWORD: ${{ secrets.SUPABASE_PGPASSWORD }}
+          PGDATABASE: ${{ secrets.SUPABASE_PGDATABASE }}
         run: |
           set -euo pipefail
 
-          # Always enable pgcrypto first
-          echo "Applying migrations/000_enable_pgcrypto.sql"
-          psql "$SUPABASE_POOLER_URL" -v ON_ERROR_STOP=1 -f "migrations/000_enable_pgcrypto.sql"
+          echo "Applying pgcrypto extension"
+          psql -v ON_ERROR_STOP=1 -f migrations/000_enable_pgcrypto.sql
 
-          # Then apply create scripts in sorted order
           for f in $(ls -1 migrations/*_create_*.sql | sort); do
             echo "Applying $f"
-            psql "$SUPABASE_POOLER_URL" -v ON_ERROR_STOP=1 -f "$f"
+            psql -v ON_ERROR_STOP=1 -f "$f"
           done
