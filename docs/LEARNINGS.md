@@ -1,0 +1,1 @@
+- 2026-02-02: Auth redirects failed due to Supabase URL config; fix by setting Site URL + Redirect URLs to deployed origin; don't assume code-only fix.
