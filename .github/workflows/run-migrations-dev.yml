@@ -1,0 +1,38 @@
+name: Run DEV migrations
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - develop
+
+jobs:
+  run-migrations:
+    name: Run migrations (DEV only)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install psql
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Run migrations via psql (shared pooler, discrete vars)
+        env:
+          PGHOST: ${{ secrets.SUPABASE_PGHOST }}
+          PGPORT: ${{ secrets.SUPABASE_PGPORT }}
+          PGUSER: ${{ secrets.SUPABASE_PGUSER }}
+          PGPASSWORD: ${{ secrets.SUPABASE_PGPASSWORD }}
+          PGDATABASE: ${{ secrets.SUPABASE_PGDATABASE }}
+        run: |
+          set -euo pipefail
+
+          echo "Applying pgcrypto extension"
+          psql -v ON_ERROR_STOP=1 -f migrations/000_enable_pgcrypto.sql
+
+          for f in $(ls -1 migrations/*_create_*.sql | sort); do
+            echo "Applying $f"
+            psql -v ON_ERROR_STOP=1 -f "$f"
+          done
