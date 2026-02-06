@@ -7,6 +7,7 @@ export default function BriefsPage() {
   const [briefs, setBriefs] = useState([])
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState(null)
+  const [expandedSections, setExpandedSections] = useState({})
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -22,12 +23,19 @@ export default function BriefsPage() {
     try {
       const res = await fetch('/api/briefs')
       const data = await res.json()
-      setBriefs(data)
+      setBriefs(data || [])
     } catch (err) {
       console.error('Failed to fetch briefs:', err)
     } finally {
       setLoading(false)
     }
+  }
+
+  function toggleSection(briefId, sectionId) {
+    setExpandedSections(prev => ({
+      ...prev,
+      [`${briefId}-${sectionId}`]: !prev[`${briefId}-${sectionId}`]
+    }))
   }
 
   if (!user) return <div style={{ padding: 20 }}>Loading...</div>
@@ -51,14 +59,14 @@ export default function BriefsPage() {
           fontWeight: 700,
           color: '#333',
         }}>
-          📋 Briefs Archive
+          📋 Interactive Briefs
         </h1>
         <p style={{
           margin: '0 0 32px 0',
           fontSize: 14,
           color: '#666',
         }}>
-          Daily priorities and strategic context
+          Daily strategic newsletter with research and outlines
         </p>
 
         {/* Briefs List */}
@@ -85,7 +93,7 @@ export default function BriefsPage() {
           <div style={{
             display: 'flex',
             flexDirection: 'column',
-            gap: 16,
+            gap: 24,
           }}>
             {briefs.map((brief) => (
               <div
@@ -96,20 +104,11 @@ export default function BriefsPage() {
                   padding: 32,
                   boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
                   border: '1px solid #e8e8e8',
-                  transition: 'all 0.2s',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)'
-                  e.currentTarget.style.borderColor = '#ddd'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)'
-                  e.currentTarget.style.borderColor = '#e8e8e8'
                 }}
               >
                 <h2 style={{
                   margin: '0 0 4px 0',
-                  fontSize: 20,
+                  fontSize: 24,
                   fontWeight: 700,
                   color: '#333',
                 }}>
@@ -125,96 +124,128 @@ export default function BriefsPage() {
                   </p>
                 )}
 
-                {/* Priorities */}
-                {brief.priorities && brief.priorities.length > 0 && (
-                  <div style={{ marginBottom: 24 }}>
-                    <h3 style={{
-                      margin: '0 0 12px 0',
-                      fontSize: 12,
-                      fontWeight: 700,
-                      color: '#d63384',
-                      textTransform: 'uppercase',
-                      letterSpacing: 1,
-                    }}>
-                      🔴 CRITICAL
-                    </h3>
-                    <ul style={{
-                      margin: 0,
-                      paddingLeft: 20,
-                      color: '#555',
-                    }}>
-                      {brief.priorities.map((p, i) => (
-                        <li key={i} style={{
-                          marginBottom: 8,
-                          lineHeight: 1.6,
-                          fontSize: 14,
-                        }}>
-                          {p}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
+                {/* Interactive Sections */}
+                {brief.sections && brief.sections.map((section, idx) => (
+                  <div key={idx} style={{ marginBottom: 24 }}>
+                    <div
+                      onClick={() => toggleSection(brief.id, idx)}
+                      style={{
+                        cursor: 'pointer',
+                        padding: 16,
+                        background: '#f9f9f9',
+                        borderRadius: 8,
+                        borderLeft: `4px solid ${section.color || '#667eea'}`,
+                        marginBottom: 8,
+                      }}
+                    >
+                      <h3 style={{
+                        margin: 0,
+                        fontSize: 16,
+                        fontWeight: 700,
+                        color: '#333',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                      }}>
+                        {section.icon} {section.title}
+                        <span style={{ fontSize: 12, color: '#999' }}>
+                          {expandedSections[`${brief.id}-${idx}`] ? '▲' : '▼'}
+                        </span>
+                      </h3>
+                    </div>
 
-                {/* Opportunities */}
-                {brief.opportunities && brief.opportunities.length > 0 && (
-                  <div style={{ marginBottom: 24 }}>
-                    <h3 style={{
-                      margin: '0 0 12px 0',
-                      fontSize: 12,
-                      fontWeight: 700,
-                      color: '#28a745',
-                      textTransform: 'uppercase',
-                      letterSpacing: 1,
-                    }}>
-                      💡 OPPORTUNITIES
-                    </h3>
-                    <ul style={{
-                      margin: 0,
-                      paddingLeft: 20,
-                      color: '#555',
-                    }}>
-                      {brief.opportunities.map((o, i) => (
-                        <li key={i} style={{
-                          marginBottom: 8,
-                          lineHeight: 1.6,
-                          fontSize: 14,
-                        }}>
-                          {o}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
+                    {expandedSections[`${brief.id}-${idx}`] && (
+                      <div style={{
+                        padding: 16,
+                        background: '#fafafa',
+                        borderRadius: 8,
+                        marginBottom: 16,
+                      }}>
+                        {section.content && (
+                          <div style={{ marginBottom: 16 }}>
+                            <p style={{ margin: 0, fontSize: 14, color: '#555', lineHeight: 1.6 }}>
+                              {section.content}
+                            </p>
+                          </div>
+                        )}
 
-                {/* Blockers */}
-                {brief.blockers && brief.blockers.length > 0 && (
-                  <div>
-                    <h3 style={{
-                      margin: '0 0 12px 0',
-                      fontSize: 12,
-                      fontWeight: 700,
-                      color: '#ffc107',
-                      textTransform: 'uppercase',
-                      letterSpacing: 1,
-                    }}>
-                      ⚠️ BLOCKERS
+                        {section.steps && (
+                          <div style={{ marginBottom: 16 }}>
+                            <h4 style={{ margin: '0 0 8px 0', fontSize: 14, fontWeight: 700, color: '#667eea' }}>
+                              📝 Step-by-step outline
+                            </h4>
+                            <ol style={{ margin: 0, paddingLeft: 20 }}>
+                              {section.steps.map((step, i) => (
+                                <li key={i} style={{ marginBottom: 8, fontSize: 14, color: '#555' }}>
+                                  {step}
+                                </li>
+                              ))}
+                            </ol>
+                          </div>
+                        )}
+
+                        {section.links && section.links.length > 0 && (
+                          <div>
+                            <h4 style={{ margin: '0 0 8px 0', fontSize: 14, fontWeight: 700, color: '#667eea' }}>
+                              🔗 Resources
+                            </h4>
+                            <ul style={{ margin: 0, paddingLeft: 20 }}>
+                              {section.links.map((link, i) => (
+                                <li key={i} style={{ marginBottom: 4 }}>
+                                  <a
+                                    href={link.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style={{ fontSize: 14, color: '#667eea', textDecoration: 'none' }}
+                                  >
+                                    {link.title} →
+                                  </a>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
+
+                {/* Research Links */}
+                {brief.research_links && brief.research_links.length > 0 && (
+                  <div style={{
+                    marginTop: 24,
+                    padding: 16,
+                    background: '#f0f4ff',
+                    borderRadius: 8,
+                  }}>
+                    <h3 style={{ margin: '0 0 12px 0', fontSize: 14, fontWeight: 700, color: '#667eea' }}>
+                      🔍 RESEARCH & COMPETITORS
                     </h3>
-                    <ul style={{
-                      margin: 0,
-                      paddingLeft: 20,
-                      color: '#555',
+                    <div style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 8,
                     }}>
-                      {brief.blockers.map((b, i) => (
-                        <li key={i} style={{
-                          marginBottom: 8,
-                          lineHeight: 1.6,
-                          fontSize: 14,
-                        }}>
-                          {b}
-                        </li>
+                      {brief.research_links.map((link, i) => (
+                        <a
+                          key={i}
+                          href={link.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            fontSize: 14,
+                            color: '#667eea',
+                            textDecoration: 'none',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 8,
+                          }}
+                        >
+                          <span>{link.title}</span>
+                          <span style={{ fontSize: 11, color: '#999' }}>↗</span>
+                        </a>
                       ))}
-                    </ul>
+                    </div>
                   </div>
                 )}
               </div>
