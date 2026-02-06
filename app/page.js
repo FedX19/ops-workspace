@@ -1,40 +1,47 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { createClient } from '@supabase/supabase-js'
+import { getSupabase } from '../lib/supabaseClient'
 import Link from 'next/link'
 
 export default function Home() {
   const [user, setUser] = useState(null)
   const [brief, setBrief] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [checking, setChecking] = useState(true)
 
   useEffect(() => {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    )
+    const supabase = getSupabase()
+    if (!supabase) {
+      console.error('Supabase not initialized')
+      window.location.href = '/login'
+      return
+    }
 
-    // Check session and set up listener
+    // Check current session
     supabase.auth.getSession().then(({ data, error }) => {
-      console.log('Session check:', { data, error })
+      console.log('Session check:', { hasSession: !!data.session, error })
+      
       if (error) {
         console.error('Session error:', error)
         window.location.href = '/login'
         return
       }
+
       if (!data.session?.user) {
-        console.log('No session found, redirecting to login')
+        console.log('No session, redirecting to login')
         window.location.href = '/login'
         return
       }
-      console.log('Session found:', data.session.user.email)
+
+      console.log('Logged in as:', data.session.user.email)
       setUser(data.session.user)
+      setChecking(false)
       fetchLatestBrief()
     })
 
     // Listen for auth changes
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('Auth state changed:', event, session)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth event:', event)
       if (event === 'SIGNED_OUT' || !session) {
         window.location.href = '/login'
       } else if (session?.user) {
@@ -42,9 +49,7 @@ export default function Home() {
       }
     })
 
-    return () => {
-      authListener.subscription.unsubscribe()
-    }
+    return () => subscription.unsubscribe()
   }, [])
 
   async function fetchLatestBrief() {
@@ -62,15 +67,27 @@ export default function Home() {
   }
 
   async function signOut() {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    )
-    await supabase.auth.signOut()
+    const supabase = getSupabase()
+    if (supabase) {
+      await supabase.auth.signOut()
+    }
     window.location.href = '/login'
   }
 
-  if (!user) return <div style={{ padding: 20, color: 'white' }}>Loading...</div>
+  if (checking || !user) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: 'white',
+      }}>
+        Loading...
+      </div>
+    )
+  }
 
   return (
     <div style={{
@@ -106,7 +123,6 @@ export default function Home() {
             padding: 32,
             color: 'white',
             textAlign: 'center',
-            fontSize: 14,
           }}>
             Loading brief...
           </div>
@@ -132,7 +148,6 @@ export default function Home() {
                 margin: '0 0 24px 0',
                 fontSize: 12,
                 color: '#999',
-                textTransform: 'uppercase',
               }}>
                 {brief.date}
               </p>
@@ -144,17 +159,12 @@ export default function Home() {
                     fontSize: 12,
                     fontWeight: 700,
                     color: '#d63384',
-                    textTransform: 'uppercase',
                   }}>
                     🔴 CRITICAL
                   </h3>
                   <ul style={{ margin: 0, paddingLeft: 0, listStyle: 'none' }}>
                     {brief.priorities.slice(0, 2).map((p, i) => (
-                      <li key={i} style={{
-                        fontSize: 14,
-                        color: '#555',
-                        marginBottom: 8,
-                      }}>
+                      <li key={i} style={{ fontSize: 14, color: '#555', marginBottom: 8 }}>
                         {p}
                       </li>
                     ))}
@@ -194,15 +204,8 @@ export default function Home() {
                 textAlign: 'center',
                 cursor: 'pointer',
               }}>
-                <div style={{ fontSize: 32, marginBottom: 8 }}>
-                  {item.icon}
-                </div>
-                <h3 style={{
-                  margin: 0,
-                  fontSize: 16,
-                  fontWeight: 700,
-                  color: '#333',
-                }}>
+                <div style={{ fontSize: 32, marginBottom: 8 }}>{item.icon}</div>
+                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#333' }}>
                   {item.label}
                 </h3>
               </div>
@@ -220,7 +223,6 @@ export default function Home() {
               border: '1px solid rgba(255,255,255,0.3)',
               borderRadius: 8,
               cursor: 'pointer',
-              fontSize: 14,
             }}
           >
             Sign Out

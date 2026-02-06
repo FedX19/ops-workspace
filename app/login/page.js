@@ -1,6 +1,6 @@
 'use client'
-import { useState } from 'react'
-import { createClient } from '@supabase/supabase-js'
+import { useState, useEffect } from 'react'
+import { getSupabase } from '../../lib/supabaseClient'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -8,17 +8,33 @@ export default function Login() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
+  useEffect(() => {
+    const supabase = getSupabase()
+    if (!supabase) return
+
+    // Check if already logged in
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) {
+        console.log('Already logged in, redirecting')
+        window.location.href = '/'
+      }
+    })
+  }, [])
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
 
-    try {
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-      )
+    const supabase = getSupabase()
+    if (!supabase) {
+      setError('App not initialized')
+      setLoading(false)
+      return
+    }
 
+    try {
+      console.log('Signing in...')
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -26,14 +42,10 @@ export default function Login() {
 
       if (error) throw error
 
-      console.log('Login success:', data)
-      console.log('Session:', data.session)
-      console.log('Access token:', data.session?.access_token)
+      console.log('Login success:', data.session)
       
-      // Wait a moment for session to be stored
-      await new Promise(resolve => setTimeout(resolve, 500))
-      
-      // Redirect to home
+      // Session is now stored in localStorage automatically
+      // Redirect immediately
       window.location.href = '/'
     } catch (err) {
       setError(err.message)
@@ -85,6 +97,7 @@ export default function Login() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              autoComplete="email"
               style={{
                 width: '100%',
                 padding: 16,
@@ -103,6 +116,7 @@ export default function Login() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              autoComplete="current-password"
               style={{
                 width: '100%',
                 padding: 16,
