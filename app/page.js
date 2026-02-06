@@ -51,7 +51,7 @@ export default function Home() {
           marginBottom: 24
         }}>
           <h2 style={{ marginTop: 0, color: '#667eea' }}>📋 Today's Brief</h2>
-          <p style={{ color: '#999, fontSize: 12 }}>{brief.date}</p>
+          <p style={{ color: '#999', fontSize: 12 }}>{brief.date}</p>
           
           {brief.priorities && brief.priorities.length > 0 && (
             <div style={{ marginBottom: 12 }}>

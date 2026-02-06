@@ -2,7 +2,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabaseClient'
 import Link from 'next/link'
-import styles from '../styles.module.css'
 
 export default function BriefsPage() {
   const [briefs, setBriefs] = useState([])
