@@ -1,16 +1,17 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabaseClient'
-import Image from 'next/image'
 
 export default function Login() {
   const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [mode, setMode] = useState('password') // 'password' or 'magic'
+  const [isSignUp, setIsSignUp] = useState(false)
   const [sent, setSent] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
   useEffect(() => {
-    // Check if already logged in
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) {
         window.location.href = '/'
@@ -18,7 +19,36 @@ export default function Login() {
     })
   }, [])
 
-  const handleSubmit = async (e) => {
+  const handlePasswordAuth = async (e) => {
+    e.preventDefault()
+    setLoading(true)
+    setError(null)
+
+    if (!email || !password) {
+      setError('Please enter email and password')
+      setLoading(false)
+      return
+    }
+
+    try {
+      if (isSignUp) {
+        const { error } = await supabase.auth.signUp({ email, password })
+        if (error) throw error
+        setSent(true)
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({ email, password })
+        if (error) throw error
+        window.location.href = '/'
+      }
+    } catch (err) {
+      setError(err.message || 'Authentication failed')
+      console.error('Auth error:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleMagicLink = async (e) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
@@ -60,7 +90,6 @@ export default function Login() {
       position: 'relative',
       overflow: 'hidden',
     }}>
-      {/* Matrix-style background effect */}
       <div style={{
         position: 'absolute',
         top: 0,
@@ -78,7 +107,6 @@ export default function Login() {
         position: 'relative',
         zIndex: 1,
       }}>
-        {/* Logo */}
         <div style={{
           textAlign: 'center',
           marginBottom: 48,
@@ -95,7 +123,6 @@ export default function Login() {
           />
         </div>
 
-        {/* Login Card */}
         <div style={{
           background: 'rgba(255, 255, 255, 0.05)',
           backdropFilter: 'blur(10px)',
@@ -113,7 +140,7 @@ export default function Login() {
                 color: 'white',
                 textAlign: 'center',
               }}>
-                Welcome Back
+                {isSignUp ? 'Create Account' : 'Welcome Back'}
               </h2>
               <p style={{
                 margin: '0 0 32px 0',
@@ -121,10 +148,55 @@ export default function Login() {
                 color: 'rgba(255, 255, 255, 0.6)',
                 textAlign: 'center',
               }}>
-                Sign in with magic link — no password needed
+                {mode === 'password' ? (isSignUp ? 'Set up your account' : 'Sign in with your password') : 'Sign in with magic link'}
               </p>
 
-              <form onSubmit={handleSubmit}>
+              {/* Mode Toggle */}
+              <div style={{
+                display: 'flex',
+                gap: 8,
+                marginBottom: 24,
+                padding: 4,
+                background: 'rgba(0, 0, 0, 0.2)',
+                borderRadius: 8,
+              }}>
+                <button
+                  onClick={() => setMode('password')}
+                  style={{
+                    flex: 1,
+                    padding: 10,
+                    fontSize: 14,
+                    fontWeight: 600,
+                    color: mode === 'password' ? '#0a0a0a' : 'rgba(255, 255, 255, 0.6)',
+                    background: mode === 'password' ? 'linear-gradient(135deg, #00d4ff 0%, #7fff00 100%)' : 'transparent',
+                    border: 'none',
+                    borderRadius: 6,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  Password
+                </button>
+                <button
+                  onClick={() => setMode('magic')}
+                  style={{
+                    flex: 1,
+                    padding: 10,
+                    fontSize: 14,
+                    fontWeight: 600,
+                    color: mode === 'magic' ? '#0a0a0a' : 'rgba(255, 255, 255, 0.6)',
+                    background: mode === 'magic' ? 'linear-gradient(135deg, #00d4ff 0%, #7fff00 100%)' : 'transparent',
+                    border: 'none',
+                    borderRadius: 6,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  Magic Link
+                </button>
+              </div>
+
+              <form onSubmit={mode === 'password' ? handlePasswordAuth : handleMagicLink}>
                 <input
                   type="email"
                   placeholder="you@example.com"
@@ -152,6 +224,36 @@ export default function Login() {
                     e.target.style.boxShadow = 'none'
                   }}
                 />
+
+                {mode === 'password' && (
+                  <input
+                    type="password"
+                    placeholder="Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    disabled={loading}
+                    style={{
+                      width: '100%',
+                      padding: 16,
+                      fontSize: 16,
+                      border: '1px solid rgba(0, 212, 255, 0.3)',
+                      borderRadius: 12,
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      color: 'white',
+                      marginBottom: 16,
+                      outline: 'none',
+                      transition: 'all 0.2s',
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#00d4ff'
+                      e.target.style.boxShadow = '0 0 0 3px rgba(0, 212, 255, 0.1)'
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = 'rgba(0, 212, 255, 0.3)'
+                      e.target.style.boxShadow = 'none'
+                    }}
+                  />
+                )}
 
                 {error && (
                   <div style={{
@@ -194,9 +296,29 @@ export default function Login() {
                     e.target.style.boxShadow = 'none'
                   }}
                 >
-                  {loading ? 'Sending...' : 'Send Magic Link'}
+                  {loading ? 'Loading...' : (
+                    mode === 'password' ? (isSignUp ? 'Create Account' : 'Sign In') : 'Send Magic Link'
+                  )}
                 </button>
               </form>
+
+              {mode === 'password' && (
+                <button
+                  onClick={() => setIsSignUp(!isSignUp)}
+                  style={{
+                    width: '100%',
+                    marginTop: 16,
+                    padding: '10px 20px',
+                    fontSize: 14,
+                    color: '#00d4ff',
+                    background: 'transparent',
+                    border: 'none',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {isSignUp ? 'Already have an account? Sign in' : 'Need an account? Sign up'}
+                </button>
+              )}
 
               <p style={{
                 margin: '24px 0 0 0',
@@ -204,7 +326,7 @@ export default function Login() {
                 color: 'rgba(255, 255, 255, 0.4)',
                 textAlign: 'center',
               }}>
-                Click the link in your email to sign in securely
+                {mode === 'password' ? 'Fast and secure password login' : 'Click the link in your email to sign in'}
               </p>
             </>
           ) : (
@@ -228,7 +350,7 @@ export default function Login() {
                 fontWeight: 700,
                 color: 'white',
               }}>
-                Check your email
+                {mode === 'password' && isSignUp ? 'Check your email' : 'Success!'}
               </h3>
               <p style={{
                 margin: '0 0 24px 0',
@@ -236,20 +358,17 @@ export default function Login() {
                 color: 'rgba(255, 255, 255, 0.6)',
                 lineHeight: 1.6,
               }}>
-                We sent a magic link to<br />
-                <strong style={{ color: '#00d4ff' }}>{email}</strong>
-              </p>
-              <p style={{
-                margin: 0,
-                fontSize: 12,
-                color: 'rgba(255, 255, 255, 0.4)',
-              }}>
-                Click the link to sign in instantly
+                {mode === 'password' && isSignUp ? (
+                  <>We sent a confirmation link to<br /><strong style={{ color: '#00d4ff' }}>{email}</strong></>
+                ) : (
+                  <>We sent a magic link to<br /><strong style={{ color: '#00d4ff' }}>{email}</strong></>
+                )}
               </p>
               <button
                 onClick={() => {
                   setSent(false)
                   setEmail('')
+                  setPassword('')
                 }}
                 style={{
                   marginTop: 24,
@@ -262,13 +381,12 @@ export default function Login() {
                   cursor: 'pointer',
                 }}
               >
-                Use different email
+                Back to login
               </button>
             </div>
           )}
         </div>
 
-        {/* Footer */}
         <p style={{
           marginTop: 32,
           fontSize: 12,
