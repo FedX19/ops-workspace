@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { supabase } from '../../lib/supabaseClient'
+import { getSupabase } from '../../lib/supabaseClient'
 import { isAllowedEmail } from '../../lib/allowedUsers'
 
 export default function Login() {
@@ -11,12 +11,22 @@ export default function Login() {
   const [sent, setSent] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [supabase, setSupabase] = useState(null)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
+    const client = getSupabase()
+    if (!client) {
+      setError('Configuration error. Contact admin.')
+      return
+    }
+    setSupabase(client)
+    
+    client.auth.getSession().then(({ data }) => {
       if (data.session) {
         window.location.href = '/'
       }
+    }).catch(err => {
+      console.error('Session check error:', err)
     })
   }, [])
 
@@ -24,6 +34,12 @@ export default function Login() {
     e.preventDefault()
     setLoading(true)
     setError(null)
+
+    if (!supabase) {
+      setError('App not initialized. Refresh and try again.')
+      setLoading(false)
+      return
+    }
 
     if (!email || !password) {
       setError('Please enter email and password')
@@ -39,11 +55,16 @@ export default function Login() {
 
     try {
       if (isSignUp) {
-        const { error } = await supabase.auth.signUp({ email, password })
+        const { data, error } = await supabase.auth.signUp({ email, password })
+        console.log('SignUp response:', { data, error })
         if (error) throw error
-        setSent(true)
+        // Since email confirmation is disabled, sign in immediately
+        const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
+        if (signInError) throw signInError
+        window.location.href = '/'
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password })
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+        console.log('SignIn response:', { data, error })
         if (error) throw error
         window.location.href = '/'
       }
@@ -59,6 +80,12 @@ export default function Login() {
     e.preventDefault()
     setLoading(true)
     setError(null)
+
+    if (!supabase) {
+      setError('App not initialized. Refresh and try again.')
+      setLoading(false)
+      return
+    }
 
     if (!email) {
       setError('Please enter your email')
