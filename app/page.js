@@ -37,7 +37,7 @@ export default function Home() {
 
   return (
     <div style={{
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%)',
       minHeight: '100vh',
       paddingTop: 40,
       paddingBottom: 40,
@@ -185,7 +185,7 @@ export default function Home() {
               <p style={{
                 margin: 0,
                 fontSize: 12,
-                color: '#667eea',
+                color: '#00d4ff',
                 fontWeight: 600,
               }}>
                 View full brief →
