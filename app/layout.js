@@ -3,17 +3,10 @@ import './globals.css'
 export const metadata = {
   title: 'Ops Workspace',
   description: 'Tim & Jack operational dashboard',
-  manifest: '/manifest.json',
   icons: {
-    icon: '/favicon.svg',
-    apple: '/logo.jpg',
+    icon: '/favicon.svg'
   },
-  themeColor: '#00d4ff',
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: 'black-translucent',
-    title: 'Ops',
-  },
+  themeColor: '#00d4ff'
 }
 
 export default function RootLayout({ children }) {
@@ -21,10 +14,7 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <head>
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-        <link rel="apple-touch-icon" href="/logo.jpg" />
         <meta name="theme-color" content="#00d4ff" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
       </head>
       <body style={{ 
         margin: 0, 
