@@ -14,14 +14,37 @@ export default function Home() {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
     )
 
+    // Check session and set up listener
     supabase.auth.getSession().then(({ data, error }) => {
-      if (error || !data.session?.user) {
+      console.log('Session check:', { data, error })
+      if (error) {
+        console.error('Session error:', error)
         window.location.href = '/login'
         return
       }
+      if (!data.session?.user) {
+        console.log('No session found, redirecting to login')
+        window.location.href = '/login'
+        return
+      }
+      console.log('Session found:', data.session.user.email)
       setUser(data.session.user)
       fetchLatestBrief()
     })
+
+    // Listen for auth changes
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth state changed:', event, session)
+      if (event === 'SIGNED_OUT' || !session) {
+        window.location.href = '/login'
+      } else if (session?.user) {
+        setUser(session.user)
+      }
+    })
+
+    return () => {
+      authListener.subscription.unsubscribe()
+    }
   }, [])
 
   async function fetchLatestBrief() {

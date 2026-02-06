@@ -27,6 +27,11 @@ export default function Login() {
       if (error) throw error
 
       console.log('Login success:', data)
+      console.log('Session:', data.session)
+      console.log('Access token:', data.session?.access_token)
+      
+      // Wait a moment for session to be stored
+      await new Promise(resolve => setTimeout(resolve, 500))
       
       // Redirect to home
       window.location.href = '/'
