@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabaseClient'
+import { isAllowedEmail } from '../../lib/allowedUsers'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -30,6 +31,12 @@ export default function Login() {
       return
     }
 
+    if (!isAllowedEmail(email)) {
+      setError('Access restricted. Contact admin for access.')
+      setLoading(false)
+      return
+    }
+
     try {
       if (isSignUp) {
         const { error } = await supabase.auth.signUp({ email, password })
@@ -55,6 +62,12 @@ export default function Login() {
 
     if (!email) {
       setError('Please enter your email')
+      setLoading(false)
+      return
+    }
+
+    if (!isAllowedEmail(email)) {
+      setError('Access restricted. Contact admin for access.')
       setLoading(false)
       return
     }
