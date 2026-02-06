@@ -10,7 +10,14 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Allow public routes
-  if (pathname.startsWith('/login') || pathname.startsWith('/auth/callback') || pathname.startsWith('/_next') || pathname.startsWith('/favicon') || pathname.startsWith('/logo') || pathname.startsWith('/manifest')) {
+  if (pathname.startsWith('/login') || 
+      pathname.startsWith('/auth/callback') || 
+      pathname.startsWith('/api/auth') ||
+      pathname.startsWith('/api/admin') ||
+      pathname.startsWith('/_next') || 
+      pathname.startsWith('/favicon') || 
+      pathname.startsWith('/logo') || 
+      pathname.startsWith('/manifest')) {
     return NextResponse.next()
   }
 
