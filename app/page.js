@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { supabase } from '../lib/supabaseClient'
+import { createClient } from '@supabase/supabase-js'
 import Link from 'next/link'
 
 export default function Home() {
@@ -9,14 +9,19 @@ export default function Home() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setUser(data.session?.user || null)
-      if (!data.session?.user) {
-        window.location.href = '/login'
-      }
-    })
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    )
 
-    fetchLatestBrief()
+    supabase.auth.getSession().then(({ data, error }) => {
+      if (error || !data.session?.user) {
+        window.location.href = '/login'
+        return
+      }
+      setUser(data.session.user)
+      fetchLatestBrief()
+    })
   }, [])
 
   async function fetchLatestBrief() {
@@ -33,7 +38,16 @@ export default function Home() {
     }
   }
 
-  if (!user) return <div style={{ padding: 20 }}>Loading...</div>
+  async function signOut() {
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    )
+    await supabase.auth.signOut()
+    window.location.href = '/login'
+  }
+
+  if (!user) return <div style={{ padding: 20, color: 'white' }}>Loading...</div>
 
   return (
     <div style={{
@@ -43,7 +57,6 @@ export default function Home() {
       paddingBottom: 40,
     }}>
       <div style={{ maxWidth: 1000, margin: '0 auto', padding: '0 20px' }}>
-        {/* Header */}
         <div style={{ marginBottom: 40 }}>
           <h1 style={{
             margin: 0,
@@ -63,7 +76,6 @@ export default function Home() {
           </p>
         </div>
 
-        {/* Today's Brief Card */}
         {loading ? (
           <div style={{
             background: 'rgba(255,255,255,0.1)',
@@ -84,16 +96,6 @@ export default function Home() {
               boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
               marginBottom: 32,
               cursor: 'pointer',
-              transition: 'transform 0.2s, box-shadow 0.2s',
-              border: 'none',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-4px)'
-              e.currentTarget.style.boxShadow = '0 25px 70px rgba(0,0,0,0.35)'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)'
-              e.currentTarget.style.boxShadow = '0 20px 60px rgba(0,0,0,0.3)'
             }}>
               <h2 style={{
                 margin: '0 0 8px 0',
@@ -108,38 +110,27 @@ export default function Home() {
                 fontSize: 12,
                 color: '#999',
                 textTransform: 'uppercase',
-                letterSpacing: 1,
               }}>
                 {brief.date}
               </p>
 
               {brief.priorities && brief.priorities.length > 0 && (
-                <div style={{
-                  marginBottom: 24,
-                  paddingBottom: 24,
-                  borderBottom: '1px solid #f0f0f0',
-                }}>
+                <div>
                   <h3 style={{
                     margin: '0 0 12px 0',
                     fontSize: 12,
                     fontWeight: 700,
                     color: '#d63384',
                     textTransform: 'uppercase',
-                    letterSpacing: 1,
                   }}>
                     🔴 CRITICAL
                   </h3>
-                  <ul style={{
-                    margin: 0,
-                    paddingLeft: 0,
-                    listStyle: 'none',
-                  }}>
+                  <ul style={{ margin: 0, paddingLeft: 0, listStyle: 'none' }}>
                     {brief.priorities.slice(0, 2).map((p, i) => (
                       <li key={i} style={{
                         fontSize: 14,
                         color: '#555',
                         marginBottom: 8,
-                        lineHeight: 1.5,
                       }}>
                         {p}
                       </li>
@@ -147,49 +138,6 @@ export default function Home() {
                   </ul>
                 </div>
               )}
-
-              {brief.opportunities && brief.opportunities.length > 0 && (
-                <div style={{
-                  marginBottom: 24,
-                  paddingBottom: 24,
-                  borderBottom: '1px solid #f0f0f0',
-                }}>
-                  <h3 style={{
-                    margin: '0 0 12px 0',
-                    fontSize: 12,
-                    fontWeight: 700,
-                    color: '#28a745',
-                    textTransform: 'uppercase',
-                    letterSpacing: 1,
-                  }}>
-                    💡 OPPORTUNITIES
-                  </h3>
-                  <ul style={{
-                    margin: 0,
-                    paddingLeft: 0,
-                    listStyle: 'none',
-                  }}>
-                    {brief.opportunities.slice(0, 1).map((o, i) => (
-                      <li key={i} style={{
-                        fontSize: 14,
-                        color: '#555',
-                        lineHeight: 1.5,
-                      }}>
-                        {o}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              <p style={{
-                margin: 0,
-                fontSize: 12,
-                color: '#00d4ff',
-                fontWeight: 600,
-              }}>
-                View full brief →
-              </p>
             </div>
           </Link>
         ) : (
@@ -197,8 +145,6 @@ export default function Home() {
             background: 'white',
             borderRadius: 12,
             padding: 32,
-            boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
-            marginBottom: 32,
             textAlign: 'center',
             color: '#999',
           }}>
@@ -206,17 +152,16 @@ export default function Home() {
           </div>
         )}
 
-        {/* Navigation Grid */}
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
           gap: 16,
         }}>
           {[
-            { href: '/briefs', icon: '📋', label: 'Briefs', desc: 'Archive & history' },
-            { href: '/kanban', icon: '📊', label: 'Kanban', desc: 'Tasks & sprints' },
-            { href: '/approvals', icon: '✅', label: 'Approvals', desc: 'Decisions' },
-            { href: '/feed', icon: '📰', label: 'Feed', desc: 'Activity log' },
+            { href: '/briefs', icon: '📋', label: 'Briefs' },
+            { href: '/kanban', icon: '📊', label: 'Kanban' },
+            { href: '/approvals', icon: '✅', label: 'Approvals' },
+            { href: '/feed', icon: '📰', label: 'Feed' },
           ].map((item) => (
             <Link key={item.href} href={item.href} style={{ textDecoration: 'none' }}>
               <div style={{
@@ -225,44 +170,26 @@ export default function Home() {
                 padding: 20,
                 textAlign: 'center',
                 cursor: 'pointer',
-                transition: 'transform 0.2s, box-shadow 0.2s',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-2px)'
-                e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.15)'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)'
-                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)'
               }}>
                 <div style={{ fontSize: 32, marginBottom: 8 }}>
                   {item.icon}
                 </div>
                 <h3 style={{
-                  margin: '0 0 4px 0',
+                  margin: 0,
                   fontSize: 16,
                   fontWeight: 700,
                   color: '#333',
                 }}>
                   {item.label}
                 </h3>
-                <p style={{
-                  margin: 0,
-                  fontSize: 12,
-                  color: '#999',
-                }}>
-                  {item.desc}
-                </p>
               </div>
             </Link>
           ))}
         </div>
 
-        {/* Sign Out */}
         <div style={{ marginTop: 40, textAlign: 'center' }}>
           <button
-            onClick={() => supabase.auth.signOut()}
+            onClick={signOut}
             style={{
               padding: '10px 20px',
               background: 'rgba(255,255,255,0.2)',
@@ -271,14 +198,6 @@ export default function Home() {
               borderRadius: 8,
               cursor: 'pointer',
               fontSize: 14,
-              fontWeight: 500,
-              transition: 'all 0.2s',
-            }}
-            onMouseEnter={(e) => {
-              e.target.style.background = 'rgba(255,255,255,0.3)'
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.background = 'rgba(255,255,255,0.2)'
             }}
           >
             Sign Out
