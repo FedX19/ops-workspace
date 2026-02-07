@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { isAllowedEmail } from '@/lib/allowedUsers'
 import { login } from './actions'
 
@@ -8,6 +9,7 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
+  const router = useRouter()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -33,11 +35,17 @@ export default function Login() {
       
       console.log('Server action result:', result)
       
-      if (result?.error) {
+      if (result?.success) {
+        console.log('Login successful, redirecting...')
+        // Force page refresh to trigger middleware with new session
+        window.location.href = '/'
+      } else if (result?.error) {
         setError(result.error)
         setLoading(false)
+      } else {
+        setError('Login failed - no response')
+        setLoading(false)
       }
-      // If no error, redirect happens server-side
     } catch (err) {
       console.error('Login error:', err)
       setError(err.message || 'Login failed')
