@@ -28,8 +28,12 @@ export async function middleware(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  // Protect all routes except /login
-  if (!user && request.nextUrl.pathname !== '/login') {
+  // Public routes
+  const publicPaths = ['/login', '/status']
+  const isPublicPath = publicPaths.includes(request.nextUrl.pathname)
+
+  // Protect all routes except public ones
+  if (!user && !isPublicPath) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
