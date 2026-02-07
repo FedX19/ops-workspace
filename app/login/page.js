@@ -38,21 +38,41 @@ export default function Login() {
     const supabase = createClient()
 
     try {
-      console.log('Signing in...')
+      console.log('Attempting login for:', email)
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
-      if (error) throw error
+      if (error) {
+        console.error('Login error:', error)
+        throw error
+      }
 
-      console.log('Login success:', data.session)
+      console.log('Login successful, session:', data.session)
+      console.log('Session user:', data.session?.user?.email)
+      console.log('Access token:', data.session?.access_token?.substring(0, 20) + '...')
       
-      // Force a hard refresh to trigger middleware
-      window.location.href = '/'
+      // Wait a moment for session to fully establish
+      await new Promise(resolve => setTimeout(resolve, 500))
+      
+      // Check session was saved
+      const { data: checkData } = await supabase.auth.getSession()
+      console.log('Session check after login:', checkData.session?.user?.email)
+      
+      if (!checkData.session) {
+        throw new Error('Session not established after login')
+      }
+      
+      console.log('Redirecting to home...')
+      
+      // Use router.push to trigger middleware properly
+      router.push('/')
+      router.refresh()
     } catch (err) {
+      console.error('Login failed:', err)
       setError(err.message)
-      console.error('Login error:', err)
     } finally {
       setLoading(false)
     }
@@ -166,6 +186,15 @@ export default function Login() {
               {loading ? 'Signing in...' : 'Sign In'}
             </button>
           </form>
+          
+          <div style={{
+            marginTop: 16,
+            fontSize: 11,
+            color: '#666',
+            textAlign: 'center',
+          }}>
+            Check browser console (F12) for debug info
+          </div>
         </div>
       </div>
     </div>
