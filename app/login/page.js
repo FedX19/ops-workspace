@@ -1,103 +1,172 @@
 'use client'
-
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/browser'
-import { allowedEmails } from '@/lib/allowedUsers'
+import { useRouter } from 'next/navigation'
+import { isAllowedEmail } from '@/lib/allowedUsers'
 
-export default function LoginPage() {
+export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
   const router = useRouter()
-  const supabase = createClient()
 
-  const handleLogin = async (e) => {
+  useEffect(() => {
+    const supabase = createClient()
+
+    // Check if already logged in
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) {
+        console.log('Already logged in, redirecting')
+        router.push('/')
+      }
+    })
+  }, [router])
+
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
 
     // Email whitelist check
-    if (!allowedEmails.includes(email.toLowerCase().trim())) {
-      setError('Access denied. Contact administrator.')
+    if (!isAllowedEmail(email)) {
+      setError('Access denied. This email is not authorized.')
       setLoading(false)
       return
     }
 
+    const supabase = createClient()
+
     try {
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password
+      console.log('Signing in...')
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       })
 
-      if (signInError) {
-        setError(signInError.message)
-        setLoading(false)
-        return
-      }
+      if (error) throw error
 
-      // Success - router.push will trigger middleware session refresh
-      router.push('/')
-      router.refresh()
+      console.log('Login success:', data.session)
+      
+      // Force a hard refresh to trigger middleware
+      window.location.href = '/'
     } catch (err) {
-      setError(err.message || 'Login failed')
+      setError(err.message)
+      console.error('Login error:', err)
+    } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-900">
-      <div className="bg-gray-800 p-8 rounded-lg shadow-xl w-full max-w-md">
-        <h1 className="text-2xl font-bold text-cyan-400 mb-6 text-center">
-          Login
-        </h1>
+    <div style={{
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: 20,
+    }}>
+      <div style={{ maxWidth: 450, width: '100%' }}>
+        <div style={{ textAlign: 'center', marginBottom: 48 }}>
+          <img
+            src="/logo.jpg"
+            alt="Ops Workspace"
+            style={{ maxWidth: 300, width: '100%', height: 'auto' }}
+          />
+        </div>
 
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div>
-            <label className="block text-gray-300 mb-2" htmlFor="email">
-              Email
-            </label>
+        <div style={{
+          background: 'rgba(255, 255, 255, 0.05)',
+          backdropFilter: 'blur(10px)',
+          border: '1px solid rgba(0, 212, 255, 0.2)',
+          borderRadius: 16,
+          padding: 40,
+        }}>
+          <h2 style={{
+            margin: '0 0 32px 0',
+            fontSize: 28,
+            fontWeight: 700,
+            color: 'white',
+            textAlign: 'center',
+          }}>
+            Sign In
+          </h2>
+
+          <form onSubmit={handleSubmit}>
             <input
-              id="email"
               type="email"
+              placeholder="Email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full p-3 bg-gray-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-cyan-400"
               required
+              autoComplete="email"
               disabled={loading}
+              style={{
+                width: '100%',
+                padding: 16,
+                fontSize: 16,
+                border: '1px solid rgba(0, 212, 255, 0.3)',
+                borderRadius: 12,
+                background: 'rgba(255, 255, 255, 0.05)',
+                color: 'white',
+                marginBottom: 16,
+              }}
             />
-          </div>
-
-          <div>
-            <label className="block text-gray-300 mb-2" htmlFor="password">
-              Password
-            </label>
             <input
-              id="password"
               type="password"
+              placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-3 bg-gray-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-cyan-400"
               required
+              autoComplete="current-password"
               disabled={loading}
+              style={{
+                width: '100%',
+                padding: 16,
+                fontSize: 16,
+                border: '1px solid rgba(0, 212, 255, 0.3)',
+                borderRadius: 12,
+                background: 'rgba(255, 255, 255, 0.05)',
+                color: 'white',
+                marginBottom: 16,
+              }}
             />
-          </div>
 
-          {error && (
-            <div className="bg-red-900/50 border border-red-500 text-red-200 p-3 rounded">
-              {error}
-            </div>
-          )}
+            {error && (
+              <div style={{
+                padding: 12,
+                marginBottom: 16,
+                background: 'rgba(239, 68, 68, 0.1)',
+                border: '1px solid rgba(239, 68, 68, 0.3)',
+                borderRadius: 8,
+                color: '#fca5a5',
+                fontSize: 14,
+              }}>
+                {error}
+              </div>
+            )}
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-semibold py-3 rounded transition disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? 'Logging in...' : 'Login'}
-          </button>
-        </form>
+            <button
+              type="submit"
+              disabled={loading}
+              style={{
+                width: '100%',
+                padding: 16,
+                fontSize: 16,
+                fontWeight: 700,
+                color: '#0a0a0a',
+                background: loading ? '#999' : 'linear-gradient(135deg, #00d4ff 0%, #7fff00 100%)',
+                border: 'none',
+                borderRadius: 12,
+                cursor: loading ? 'not-allowed' : 'pointer',
+                opacity: loading ? 0.6 : 1,
+              }}
+            >
+              {loading ? 'Signing in...' : 'Sign In'}
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   )
