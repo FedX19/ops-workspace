@@ -14,11 +14,19 @@ export async function GET(request) {
   
   const url = new URL(request.url)
   console.log('[AUTH CALLBACK] Search params:', url.search)
+  console.log('[AUTH CALLBACK] Hash:', url.hash)
   
   const { searchParams } = url
-  const code = searchParams.get('code')
+  let code = searchParams.get('code')
   const error = searchParams.get('error')
   const error_description = searchParams.get('error_description')
+  
+  // Handle case where code might be in URL hash (though this is unusual for Supabase)
+  if (!code && url.hash) {
+    const hashParams = new URLSearchParams(url.hash.substring(1))
+    code = hashParams.get('code')
+    console.log('[AUTH CALLBACK] Code found in hash:', !!code)
+  }
   
   // Check for Supabase error parameters
   if (error) {
