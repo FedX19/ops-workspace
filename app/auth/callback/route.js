@@ -111,8 +111,17 @@ export async function GET(request) {
     
     console.log('[AUTH CALLBACK] ✅ SUCCESS - Session established for:', data?.user?.email)
     console.log('[AUTH CALLBACK] - Session expires at:', data?.session?.expires_at)
+    console.log('[AUTH CALLBACK] - Session user ID:', data?.user?.id)
     console.log('[AUTH CALLBACK] - setAll() was called:', setAllCalled)
-    console.log('[AUTH CALLBACK] - About to return redirect response with cookies')
+    
+    // Debug: Log the response headers to verify cookies are being set
+    const setCookieHeaders = response.headers.getSetCookie()
+    console.log('[AUTH CALLBACK] - Response has', setCookieHeaders.length, 'Set-Cookie headers')
+    setCookieHeaders.forEach((cookie, i) => {
+      console.log('[AUTH CALLBACK] - Cookie', i + ':', cookie.substring(0, 80) + '...')
+    })
+    
+    console.log('[AUTH CALLBACK] - About to return redirect response to /')
     return response // Session cookies are ON this response
   }
 
