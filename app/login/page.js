@@ -1,72 +1,35 @@
 'use client'
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase/browser'
 import { useRouter } from 'next/navigation'
 import { isAllowedEmail } from '@/lib/allowedUsers'
+import { login } from './actions'
 
 export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const router = useRouter()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setLoading(true)
     setError(null)
 
     // Email whitelist check
     if (!isAllowedEmail(email)) {
       setError('Access denied. This email is not authorized.')
-      setLoading(false)
       return
     }
 
-    const supabase = createClient()
+    const formData = new FormData()
+    formData.append('email', email)
+    formData.append('password', password)
 
-    try {
-      console.log('Attempting login for:', email)
-      
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
-
-      if (error) {
-        console.error('Login error:', error)
-        throw error
-      }
-
-      console.log('Login successful')
-      
-      // Call a server action to set the cookie on the server side
-      const response = await fetch('/api/auth/session', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          access_token: data.session.access_token,
-          refresh_token: data.session.refresh_token,
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to establish server session')
-      }
-
-      console.log('Server session established, redirecting...')
-      
-      // Now redirect - server will have the session
-      router.push('/')
-      router.refresh()
-    } catch (err) {
-      console.error('Login failed:', err)
-      setError(err.message)
-    } finally {
-      setLoading(false)
+    const result = await login(formData)
+    
+    if (result?.error) {
+      setError(result.error)
     }
+    // If no error, redirect happens server-side
   }
 
   return (
@@ -112,7 +75,6 @@ export default function Login() {
               onChange={(e) => setEmail(e.target.value)}
               required
               autoComplete="email"
-              disabled={loading}
               style={{
                 width: '100%',
                 padding: 16,
@@ -131,7 +93,6 @@ export default function Login() {
               onChange={(e) => setPassword(e.target.value)}
               required
               autoComplete="current-password"
-              disabled={loading}
               style={{
                 width: '100%',
                 padding: 16,
@@ -160,21 +121,19 @@ export default function Login() {
 
             <button
               type="submit"
-              disabled={loading}
               style={{
                 width: '100%',
                 padding: 16,
                 fontSize: 16,
                 fontWeight: 700,
                 color: '#0a0a0a',
-                background: loading ? '#999' : 'linear-gradient(135deg, #00d4ff 0%, #7fff00 100%)',
+                background: 'linear-gradient(135deg, #00d4ff 0%, #7fff00 100%)',
                 border: 'none',
                 borderRadius: 12,
-                cursor: loading ? 'not-allowed' : 'pointer',
-                opacity: loading ? 0.6 : 1,
+                cursor: 'pointer',
               }}
             >
-              {loading ? 'Signing in...' : 'Sign In'}
+              Sign In
             </button>
           </form>
         </div>
