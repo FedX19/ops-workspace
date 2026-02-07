@@ -3,9 +3,6 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
-  console.log('[Middleware] Request path:', request.nextUrl.pathname)
-  console.log('[Middleware] Cookies:', request.cookies.getAll().map(c => c.name))
-  
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -14,45 +11,34 @@ export async function middleware(request: NextRequest) {
     {
       cookies: {
         getAll() {
-          const cookies = request.cookies.getAll()
-          console.log('[Server Cookie GetAll]', cookies.length, 'cookies')
-          return cookies
+          return request.cookies.getAll()
         },
         setAll(cookiesToSet) {
-          console.log('[Server Cookie SetAll]', cookiesToSet.length, 'cookies')
-          cookiesToSet.forEach(({ name, value, options }) => {
+          cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value)
-          })
+          )
           supabaseResponse = NextResponse.next({ request })
-          cookiesToSet.forEach(({ name, value, options }) => {
+          cookiesToSet.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(name, value, options)
-          })
+          )
         },
       },
     }
   )
 
-  const { data: { user }, error } = await supabase.auth.getUser()
-  
-  console.log('[Middleware] User:', user?.email || 'none', 'Error:', error?.message || 'none')
+  const { data: { user } } = await supabase.auth.getUser()
 
-  // Public routes
   const publicPaths = ['/login', '/status']
   const isPublicPath = publicPaths.includes(request.nextUrl.pathname)
 
-  // Protect all routes except public ones
   if (!user && !isPublicPath) {
-    console.log('[Middleware] No user, redirecting to /login')
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  // Redirect logged-in users away from /login
   if (user && request.nextUrl.pathname === '/login') {
-    console.log('[Middleware] User logged in, redirecting to /')
     return NextResponse.redirect(new URL('/', request.url))
   }
 
-  console.log('[Middleware] Allowing request')
   return supabaseResponse
 }
 
