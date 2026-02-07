@@ -2,7 +2,6 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { isAllowedEmail } from '@/lib/allowedUsers'
-import { login } from './actions'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -16,7 +15,7 @@ export default function Login() {
     setError(null)
     setLoading(true)
 
-    console.log('Form submitted')
+    console.log('[Login] Form submitted')
 
     // Email whitelist check
     if (!isAllowedEmail(email)) {
@@ -26,28 +25,32 @@ export default function Login() {
     }
 
     try {
-      const formData = new FormData()
-      formData.append('email', email)
-      formData.append('password', password)
-
-      console.log('Calling server action...')
-      const result = await login(formData)
+      console.log('[Login] Calling login API...')
       
-      console.log('Server action result:', result)
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+        credentials: 'include', // Important: include cookies
+      })
       
-      if (result?.success) {
-        console.log('Login successful, redirecting...')
-        // Force page refresh to trigger middleware with new session
+      const result = await response.json()
+      
+      console.log('[Login] API response:', result)
+      
+      if (result.success) {
+        console.log('[Login] Success! Redirecting...')
+        // Force full page reload to ensure cookies are sent
         window.location.href = '/'
-      } else if (result?.error) {
-        setError(result.error)
-        setLoading(false)
       } else {
-        setError('Login failed - no response')
+        setError(result.error || 'Login failed')
         setLoading(false)
       }
+      
     } catch (err) {
-      console.error('Login error:', err)
+      console.error('[Login] Error:', err)
       setError(err.message || 'Login failed')
       setLoading(false)
     }
