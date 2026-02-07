@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { isAllowedEmail } from '@/lib/allowedUsers'
+import { createClient } from '@/lib/supabase/browser'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -25,29 +26,27 @@ export default function Login() {
     }
 
     try {
-      console.log('[Login] Calling login API...')
+      console.log('[Login] Creating client and signing in...')
       
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-        credentials: 'include', // Important: include cookies
+      const supabase = createClient()
+      
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       })
       
-      const result = await response.json()
-      
-      console.log('[Login] API response:', result)
-      
-      if (result.success) {
-        console.log('[Login] Success! Redirecting...')
-        // Force full page reload to ensure cookies are sent
-        window.location.href = '/'
-      } else {
-        setError(result.error || 'Login failed')
+      if (authError) {
+        console.error('[Login] Auth error:', authError)
+        setError(authError.message)
         setLoading(false)
+        return
       }
+      
+      console.log('[Login] Success! Session:', data.session?.user?.email)
+      console.log('[Login] Redirecting to home...')
+      
+      // Force full page reload to ensure cookies and middleware work
+      window.location.href = '/'
       
     } catch (err) {
       console.error('[Login] Error:', err)

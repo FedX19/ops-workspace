@@ -3,10 +3,6 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
-  // TEMPORARILY DISABLED FOR DEBUGGING
-  return NextResponse.next()
-  
-  /*
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -44,9 +40,10 @@ export async function middleware(request: NextRequest) {
   }
 
   return supabaseResponse
-  */
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
+  matcher: [
+    '/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+  ],
 }
