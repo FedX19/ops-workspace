@@ -3,11 +3,10 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
-  // Skip middleware for API routes
-  if (request.nextUrl.pathname.startsWith('/api/')) {
-    return NextResponse.next()
-  }
-
+  // TEMPORARILY DISABLED FOR DEBUGGING
+  return NextResponse.next()
+  
+  /*
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -45,6 +44,7 @@ export async function middleware(request: NextRequest) {
   }
 
   return supabaseResponse
+  */
 }
 
 export const config = {
