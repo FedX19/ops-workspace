@@ -1,232 +1,62 @@
-'use client'
-import { useEffect, useState } from 'react'
-import { getSupabase } from '../lib/supabaseClient'
+import { redirect } from 'next/navigation'
+import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 
-export default function Home() {
-  const [user, setUser] = useState(null)
-  const [brief, setBrief] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [checking, setChecking] = useState(true)
+export default async function HomePage() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
 
-  useEffect(() => {
-    const supabase = getSupabase()
-    if (!supabase) {
-      console.error('Supabase not initialized')
-      window.location.href = '/login'
-      return
-    }
-
-    // Check current session
-    supabase.auth.getSession().then(({ data, error }) => {
-      console.log('Session check:', { hasSession: !!data.session, error })
-      
-      if (error) {
-        console.error('Session error:', error)
-        window.location.href = '/login'
-        return
-      }
-
-      if (!data.session?.user) {
-        console.log('No session, redirecting to login')
-        window.location.href = '/login'
-        return
-      }
-
-      console.log('Logged in as:', data.session.user.email)
-      setUser(data.session.user)
-      setChecking(false)
-      fetchLatestBrief()
-    })
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('Auth event:', event)
-      if (event === 'SIGNED_OUT' || !session) {
-        window.location.href = '/login'
-      } else if (session?.user) {
-        setUser(session.user)
-      }
-    })
-
-    return () => subscription.unsubscribe()
-  }, [])
-
-  async function fetchLatestBrief() {
-    try {
-      const res = await fetch('/api/briefs')
-      const data = await res.json()
-      if (data && data.length > 0) {
-        setBrief(data[0])
-      }
-    } catch (err) {
-      console.error('Failed to fetch brief:', err)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  async function signOut() {
-    const supabase = getSupabase()
-    if (supabase) {
-      await supabase.auth.signOut()
-    }
-    window.location.href = '/login'
-  }
-
-  if (checking || !user) {
-    return (
-      <div style={{
-        minHeight: '100vh',
-        background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        color: 'white',
-      }}>
-        Loading...
-      </div>
-    )
+  if (!user) {
+    redirect('/login')
   }
 
   return (
-    <div style={{
-      background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%)',
-      minHeight: '100vh',
-      paddingTop: 40,
-      paddingBottom: 40,
-    }}>
-      <div style={{ maxWidth: 1000, margin: '0 auto', padding: '0 20px' }}>
-        <div style={{ marginBottom: 40 }}>
-          <h1 style={{
-            margin: 0,
-            fontSize: 32,
-            fontWeight: 700,
-            color: 'white',
-            marginBottom: 8,
-          }}>
-            🚀 Ops Workspace
-          </h1>
-          <p style={{
-            margin: 0,
-            fontSize: 14,
-            color: 'rgba(255,255,255,0.8)',
-          }}>
-            Welcome back, {user.email.split('@')[0]}
-          </p>
+    <div className="min-h-screen bg-gray-900 text-white p-8">
+      <div className="max-w-4xl mx-auto">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold text-cyan-400">Ops Workspace</h1>
+          <form action="/api/auth/signout" method="POST">
+            <button
+              type="submit"
+              className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded transition"
+            >
+              Sign Out
+            </button>
+          </form>
         </div>
 
-        {loading ? (
-          <div style={{
-            background: 'rgba(255,255,255,0.1)',
-            borderRadius: 12,
-            padding: 32,
-            color: 'white',
-            textAlign: 'center',
-          }}>
-            Loading brief...
-          </div>
-        ) : brief ? (
-          <Link href="/briefs" style={{ textDecoration: 'none' }}>
-            <div style={{
-              background: 'white',
-              borderRadius: 12,
-              padding: 32,
-              boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
-              marginBottom: 32,
-              cursor: 'pointer',
-            }}>
-              <h2 style={{
-                margin: '0 0 8px 0',
-                fontSize: 24,
-                fontWeight: 700,
-                color: '#333',
-              }}>
-                📋 Today's Brief
-              </h2>
-              <p style={{
-                margin: '0 0 24px 0',
-                fontSize: 12,
-                color: '#999',
-              }}>
-                {brief.date}
-              </p>
-
-              {brief.priorities && brief.priorities.length > 0 && (
-                <div>
-                  <h3 style={{
-                    margin: '0 0 12px 0',
-                    fontSize: 12,
-                    fontWeight: 700,
-                    color: '#d63384',
-                  }}>
-                    🔴 CRITICAL
-                  </h3>
-                  <ul style={{ margin: 0, paddingLeft: 0, listStyle: 'none' }}>
-                    {brief.priorities.slice(0, 2).map((p, i) => (
-                      <li key={i} style={{ fontSize: 14, color: '#555', marginBottom: 8 }}>
-                        {p}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-          </Link>
-        ) : (
-          <div style={{
-            background: 'white',
-            borderRadius: 12,
-            padding: 32,
-            textAlign: 'center',
-            color: '#999',
-          }}>
-            No brief yet for today.
-          </div>
-        )}
-
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-          gap: 16,
-        }}>
-          {[
-            { href: '/briefs', icon: '📋', label: 'Briefs' },
-            { href: '/kanban', icon: '📊', label: 'Kanban' },
-            { href: '/approvals', icon: '✅', label: 'Approvals' },
-            { href: '/feed', icon: '📰', label: 'Feed' },
-          ].map((item) => (
-            <Link key={item.href} href={item.href} style={{ textDecoration: 'none' }}>
-              <div style={{
-                background: 'white',
-                borderRadius: 12,
-                padding: 20,
-                textAlign: 'center',
-                cursor: 'pointer',
-              }}>
-                <div style={{ fontSize: 32, marginBottom: 8 }}>{item.icon}</div>
-                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#333' }}>
-                  {item.label}
-                </h3>
-              </div>
-            </Link>
-          ))}
-        </div>
-
-        <div style={{ marginTop: 40, textAlign: 'center' }}>
-          <button
-            onClick={signOut}
-            style={{
-              padding: '10px 20px',
-              background: 'rgba(255,255,255,0.2)',
-              color: 'white',
-              border: '1px solid rgba(255,255,255,0.3)',
-              borderRadius: 8,
-              cursor: 'pointer',
-            }}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Link
+            href="/briefs"
+            className="bg-gray-800 p-6 rounded-lg hover:bg-gray-700 transition"
           >
-            Sign Out
-          </button>
+            <h2 className="text-xl font-semibold text-cyan-300 mb-2">Daily Briefs</h2>
+            <p className="text-gray-400">Interactive daily briefings</p>
+          </Link>
+
+          <Link
+            href="/kanban"
+            className="bg-gray-800 p-6 rounded-lg hover:bg-gray-700 transition"
+          >
+            <h2 className="text-xl font-semibold text-cyan-300 mb-2">Kanban Board</h2>
+            <p className="text-gray-400">Task management</p>
+          </Link>
+
+          <Link
+            href="/approvals"
+            className="bg-gray-800 p-6 rounded-lg hover:bg-gray-700 transition"
+          >
+            <h2 className="text-xl font-semibold text-cyan-300 mb-2">Approvals</h2>
+            <p className="text-gray-400">Review pending requests</p>
+          </Link>
+
+          <Link
+            href="/feed"
+            className="bg-gray-800 p-6 rounded-lg hover:bg-gray-700 transition"
+          >
+            <h2 className="text-xl font-semibold text-cyan-300 mb-2">Activity Feed</h2>
+            <p className="text-gray-400">Recent updates</p>
+          </Link>
         </div>
       </div>
     </div>
