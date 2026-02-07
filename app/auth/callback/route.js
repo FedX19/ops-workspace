@@ -3,13 +3,31 @@ import { NextResponse } from 'next/server'
 
 export async function GET(request) {
   console.log('[AUTH CALLBACK] Hit /auth/callback')
+  console.log('[AUTH CALLBACK] Full URL:', request.url)
   
-  const { searchParams } = new URL(request.url)
+  const url = new URL(request.url)
+  console.log('[AUTH CALLBACK] Search params:', url.search)
+  
+  const { searchParams } = url
   const code = searchParams.get('code')
+  const error = searchParams.get('error')
+  const error_description = searchParams.get('error_description')
+  
+  // Check for Supabase error parameters
+  if (error) {
+    console.error('[AUTH CALLBACK] ⚠️  Supabase returned error:', {
+      error,
+      error_description,
+    })
+    return NextResponse.redirect(new URL(`/login?error=${encodeURIComponent(error_description || error)}`, request.url))
+  }
   
   console.log('[AUTH CALLBACK] Code present:', !!code)
   if (code) {
     console.log('[AUTH CALLBACK] Code value:', code.substring(0, 20) + '...')
+    console.log('[AUTH CALLBACK] Code length:', code.length)
+  } else {
+    console.warn('[AUTH CALLBACK] ⚠️  No code parameter found in URL')
   }
 
   if (code) {
@@ -23,6 +41,7 @@ export async function GET(request) {
     console.log('[AUTH CALLBACK] - URL:', process.env.NEXT_PUBLIC_SUPABASE_URL?.substring(0, 30) + '...')
     console.log('[AUTH CALLBACK] - Key:', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.substring(0, 20) + '...')
     
+    let setAllCalled = false
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
@@ -30,19 +49,22 @@ export async function GET(request) {
         cookies: {
           getAll() {
             const all = request.cookies.getAll()
-            console.log('[AUTH CALLBACK] Getting cookies from request:', all.length, 'cookies')
+            console.log('[AUTH CALLBACK] getAll() called - returning', all.length, 'cookies from request')
             return all
           },
           setAll(cookiesToSet) {
-            console.log('[AUTH CALLBACK] Setting', cookiesToSet.length, 'cookies on response')
+            setAllCalled = true
+            console.log('[AUTH CALLBACK] *** setAll() CALLED with', cookiesToSet.length, 'cookies ***')
             cookiesToSet.forEach(({ name, value, options }) => {
-              console.log('[AUTH CALLBACK] Setting cookie:', name, '| Path:', options?.path, '| SameSite:', options?.sameSite)
+              console.log('[AUTH CALLBACK] Setting cookie:', name, '= ...', '| Path:', options?.path, '| SameSite:', options?.sameSite, '| Secure:', options?.secure, '| HttpOnly:', options?.httpOnly)
               response.cookies.set(name, value, options)
             })
           },
         },
       }
     )
+    
+    console.log('[AUTH CALLBACK] Supabase client created, about to call exchangeCodeForSession')
 
     console.log('[AUTH CALLBACK] Calling exchangeCodeForSession...')
     const { error, data } = await supabase.auth.exchangeCodeForSession(code)
@@ -53,21 +75,27 @@ export async function GET(request) {
       errorCode: error?.code,
       hasSession: !!data?.session,
       user: data?.user?.email,
+      setAllWasCalled: setAllCalled,
     })
     
     if (error) {
-      console.error('[AUTH CALLBACK] ERROR DETAILS:', {
+      console.error('[AUTH CALLBACK] ❌ EXCHANGE FAILED:', {
         message: error.message,
         code: error.code,
         status: error.status,
+        setAllWasCalled: setAllCalled,
       })
       return NextResponse.redirect(new URL('/login?error=1', request.url))
     }
     
-    console.log('[AUTH CALLBACK] SUCCESS - Session established for:', data?.user?.email)
-    console.log('[AUTH CALLBACK] Session expires at:', data?.session?.expires_at)
-    console.log('[AUTH CALLBACK] Returning redirect response with cookies')
-    console.log('[AUTH CALLBACK] Response cookie count:', Object.keys(response.cookies).length)
+    if (!setAllCalled) {
+      console.error('[AUTH CALLBACK] ⚠️  WARNING: setAll() was NOT called! Cookies may not be set properly')
+    }
+    
+    console.log('[AUTH CALLBACK] ✅ SUCCESS - Session established for:', data?.user?.email)
+    console.log('[AUTH CALLBACK] - Session expires at:', data?.session?.expires_at)
+    console.log('[AUTH CALLBACK] - setAll() was called:', setAllCalled)
+    console.log('[AUTH CALLBACK] - About to return redirect response with cookies')
     return response // Session cookies are ON this response
   }
 
