@@ -1,22 +1,20 @@
 'use client'
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { isAllowedEmail } from '@/lib/allowedUsers'
 import { createClient } from '@/lib/supabase/browser'
 
 export default function Login() {
   const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
-  const router = useRouter()
+  const [sent, setSent] = useState(false)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError(null)
     setLoading(true)
 
-    console.log('[Login] Form submitted')
+    console.log('[Login] Magic link requested for:', email)
 
     // Email whitelist check
     if (!isAllowedEmail(email)) {
@@ -26,13 +24,13 @@ export default function Login() {
     }
 
     try {
-      console.log('[Login] Creating client and signing in...')
-      
       const supabase = createClient()
       
-      const { data, error: authError } = await supabase.auth.signInWithPassword({
+      const { error: authError } = await supabase.auth.signInWithOtp({
         email,
-        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
       })
       
       if (authError) {
@@ -42,15 +40,13 @@ export default function Login() {
         return
       }
       
-      console.log('[Login] Success! Session:', data.session?.user?.email)
-      console.log('[Login] Redirecting to home...')
-      
-      // Force full page reload to ensure cookies and middleware work
-      window.location.href = '/'
+      console.log('[Login] Magic link sent to:', email)
+      setSent(true)
+      setLoading(false)
       
     } catch (err) {
       console.error('[Login] Error:', err)
-      setError(err.message || 'Login failed')
+      setError(err.message || 'Failed to send magic link')
       setLoading(false)
     }
   }
@@ -80,89 +76,111 @@ export default function Login() {
           borderRadius: 16,
           padding: 40,
         }}>
-          <h2 style={{
-            margin: '0 0 32px 0',
-            fontSize: 28,
-            fontWeight: 700,
-            color: 'white',
-            textAlign: 'center',
-          }}>
-            Sign In
-          </h2>
-
-          <form onSubmit={handleSubmit}>
-            <input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              autoComplete="email"
-              disabled={loading}
-              style={{
-                width: '100%',
-                padding: 16,
-                fontSize: 16,
-                border: '1px solid rgba(0, 212, 255, 0.3)',
-                borderRadius: 12,
-                background: 'rgba(255, 255, 255, 0.05)',
-                color: 'white',
-                marginBottom: 16,
-              }}
-            />
-            <input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              autoComplete="current-password"
-              disabled={loading}
-              style={{
-                width: '100%',
-                padding: 16,
-                fontSize: 16,
-                border: '1px solid rgba(0, 212, 255, 0.3)',
-                borderRadius: 12,
-                background: 'rgba(255, 255, 255, 0.05)',
-                color: 'white',
-                marginBottom: 16,
-              }}
-            />
-
-            {error && (
-              <div style={{
-                padding: 12,
-                marginBottom: 16,
-                background: 'rgba(239, 68, 68, 0.1)',
-                border: '1px solid rgba(239, 68, 68, 0.3)',
-                borderRadius: 8,
-                color: '#fca5a5',
-                fontSize: 14,
-              }}>
-                {error}
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={loading}
-              style={{
-                width: '100%',
-                padding: 16,
-                fontSize: 16,
+          {!sent ? (
+            <>
+              <h2 style={{
+                margin: '0 0 32px 0',
+                fontSize: 28,
                 fontWeight: 700,
-                color: '#0a0a0a',
-                background: loading ? '#999' : 'linear-gradient(135deg, #00d4ff 0%, #7fff00 100%)',
-                border: 'none',
-                borderRadius: 12,
-                cursor: loading ? 'not-allowed' : 'pointer',
-                opacity: loading ? 0.6 : 1,
-              }}
-            >
-              {loading ? 'Signing in...' : 'Sign In'}
-            </button>
-          </form>
+                color: 'white',
+                textAlign: 'center',
+              }}>
+                Sign In
+              </h2>
+
+              <form onSubmit={handleSubmit}>
+                <input
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  autoComplete="email"
+                  disabled={loading}
+                  style={{
+                    width: '100%',
+                    padding: 16,
+                    fontSize: 16,
+                    border: '1px solid rgba(0, 212, 255, 0.3)',
+                    borderRadius: 12,
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    color: 'white',
+                    marginBottom: 16,
+                    boxSizing: 'border-box',
+                  }}
+                />
+
+                {error && (
+                  <div style={{
+                    padding: 12,
+                    marginBottom: 16,
+                    background: 'rgba(239, 68, 68, 0.1)',
+                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                    borderRadius: 8,
+                    color: '#fca5a5',
+                    fontSize: 14,
+                  }}>
+                    {error}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  style={{
+                    width: '100%',
+                    padding: 16,
+                    fontSize: 16,
+                    fontWeight: 700,
+                    color: '#0a0a0a',
+                    background: loading ? '#999' : 'linear-gradient(135deg, #00d4ff 0%, #7fff00 100%)',
+                    border: 'none',
+                    borderRadius: 12,
+                    cursor: loading ? 'not-allowed' : 'pointer',
+                    opacity: loading ? 0.6 : 1,
+                  }}
+                >
+                  {loading ? 'Sending...' : 'Send Magic Link'}
+                </button>
+              </form>
+            </>
+          ) : (
+            <>
+              <h2 style={{
+                margin: '0 0 16px 0',
+                fontSize: 28,
+                fontWeight: 700,
+                color: '#7fff00',
+                textAlign: 'center',
+              }}>
+                Check Your Email ✓
+              </h2>
+              <p style={{
+                fontSize: 16,
+                color: '#ccc',
+                textAlign: 'center',
+                margin: 0,
+              }}>
+                A magic link has been sent to <strong>{email}</strong>. Click it to sign in.
+              </p>
+              <button
+                onClick={() => { setSent(false); setEmail(''); }}
+                style={{
+                  marginTop: 24,
+                  width: '100%',
+                  padding: 12,
+                  fontSize: 14,
+                  color: '#00d4ff',
+                  background: 'transparent',
+                  border: '1px solid rgba(0, 212, 255, 0.5)',
+                  borderRadius: 8,
+                  cursor: 'pointer',
+                }}
+              >
+                Try a different email
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>
