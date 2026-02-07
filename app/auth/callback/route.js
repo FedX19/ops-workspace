@@ -1,6 +1,13 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 
+// This is the magic link callback endpoint
+// Flow: User clicks magic link → browser goes to /auth/callback?code=XXX
+// → This handler exchanges code for session → redirects to / with session cookies
+//
+// KEY INSIGHT: The response object must have cookies set BEFORE returning
+// Otherwise the browser won't receive the Set-Cookie headers
+
 export async function GET(request) {
   console.log('[AUTH CALLBACK] Hit /auth/callback')
   console.log('[AUTH CALLBACK] Full URL:', request.url)
@@ -35,11 +42,21 @@ export async function GET(request) {
     const response = NextResponse.redirect(new URL('/', request.url))
     console.log('[AUTH CALLBACK] Created redirect response to /')
 
+    // Validate environment variables
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+      console.error('[AUTH CALLBACK] ❌ CRITICAL: NEXT_PUBLIC_SUPABASE_URL is not configured!')
+      return NextResponse.redirect(new URL('/login?error=config', request.url))
+    }
+    if (!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      console.error('[AUTH CALLBACK] ❌ CRITICAL: NEXT_PUBLIC_SUPABASE_ANON_KEY is not configured!')
+      return NextResponse.redirect(new URL('/login?error=config', request.url))
+    }
+
     // Create Supabase client INLINE — write cookies directly to the response object
     // (not via the shared createClient() helper, which uses cookies() from next/headers)
     console.log('[AUTH CALLBACK] Creating Supabase client with:')
-    console.log('[AUTH CALLBACK] - URL:', process.env.NEXT_PUBLIC_SUPABASE_URL?.substring(0, 30) + '...')
-    console.log('[AUTH CALLBACK] - Key:', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.substring(0, 20) + '...')
+    console.log('[AUTH CALLBACK] - URL:', process.env.NEXT_PUBLIC_SUPABASE_URL.substring(0, 30) + '...')
+    console.log('[AUTH CALLBACK] - Key:', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY.substring(0, 20) + '...')
     
     let setAllCalled = false
     const supabase = createServerClient(
