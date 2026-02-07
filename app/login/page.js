@@ -1,6 +1,5 @@
 'use client'
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { isAllowedEmail } from '@/lib/allowedUsers'
 import { login } from './actions'
 
@@ -8,28 +7,42 @@ export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState(null)
-  const router = useRouter()
+  const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError(null)
+    setLoading(true)
+
+    console.log('Form submitted')
 
     // Email whitelist check
     if (!isAllowedEmail(email)) {
       setError('Access denied. This email is not authorized.')
+      setLoading(false)
       return
     }
 
-    const formData = new FormData()
-    formData.append('email', email)
-    formData.append('password', password)
+    try {
+      const formData = new FormData()
+      formData.append('email', email)
+      formData.append('password', password)
 
-    const result = await login(formData)
-    
-    if (result?.error) {
-      setError(result.error)
+      console.log('Calling server action...')
+      const result = await login(formData)
+      
+      console.log('Server action result:', result)
+      
+      if (result?.error) {
+        setError(result.error)
+        setLoading(false)
+      }
+      // If no error, redirect happens server-side
+    } catch (err) {
+      console.error('Login error:', err)
+      setError(err.message || 'Login failed')
+      setLoading(false)
     }
-    // If no error, redirect happens server-side
   }
 
   return (
@@ -75,6 +88,7 @@ export default function Login() {
               onChange={(e) => setEmail(e.target.value)}
               required
               autoComplete="email"
+              disabled={loading}
               style={{
                 width: '100%',
                 padding: 16,
@@ -93,6 +107,7 @@ export default function Login() {
               onChange={(e) => setPassword(e.target.value)}
               required
               autoComplete="current-password"
+              disabled={loading}
               style={{
                 width: '100%',
                 padding: 16,
@@ -121,19 +136,21 @@ export default function Login() {
 
             <button
               type="submit"
+              disabled={loading}
               style={{
                 width: '100%',
                 padding: 16,
                 fontSize: 16,
                 fontWeight: 700,
                 color: '#0a0a0a',
-                background: 'linear-gradient(135deg, #00d4ff 0%, #7fff00 100%)',
+                background: loading ? '#999' : 'linear-gradient(135deg, #00d4ff 0%, #7fff00 100%)',
                 border: 'none',
                 borderRadius: 12,
-                cursor: 'pointer',
+                cursor: loading ? 'not-allowed' : 'pointer',
+                opacity: loading ? 0.6 : 1,
               }}
             >
-              Sign In
+              {loading ? 'Signing in...' : 'Sign In'}
             </button>
           </form>
         </div>
