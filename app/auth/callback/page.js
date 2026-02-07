@@ -1,31 +1,35 @@
 "use client"
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { getSupabase } from "../../../lib/supabaseClient"
-export default function CallbackPage(){
+import { createClient } from "@/lib/supabase/browser"
+
+export default function CallbackPage() {
   const router = useRouter()
-  useEffect(()=>{
-    async function run(){
-      const supabase = getSupabase()
-      if(!supabase){
-        router.replace('/login?error=1')
-        return
-      }
-      try{
+  
+  useEffect(() => {
+    async function run() {
+      const supabase = createClient()
+      
+      try {
         const url = window.location.href
         const { error } = await supabase.auth.exchangeCodeForSession(url)
-        if(error) {
+        if (error) {
           console.error('exchangeCodeForSession error', error)
           router.replace('/login?error=1')
         } else {
           router.replace('/')
         }
-      }catch(e){
+      } catch (e) {
         console.error(e)
         router.replace('/login?error=1')
       }
     }
     run()
-  },[])
-  return (<div style={{padding:20}}>Signing you in…</div>)
+  }, [router])
+  
+  return (
+    <div style={{ padding: 20 }}>
+      Signing you in…
+    </div>
+  )
 }

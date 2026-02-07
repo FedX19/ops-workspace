@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { supabase } from '../../lib/supabaseClient'
+import { createClient } from '@/lib/supabase/browser'
 import Link from 'next/link'
 
 export default function ApprovalsPage() {
@@ -12,6 +12,7 @@ export default function ApprovalsPage() {
   const [newRisk, setNewRisk] = useState('medium')
 
   useEffect(() => {
+    const supabase = createClient()
     supabase.auth.getSession().then(({ data }) => {
       const session = data.session?.user
       setUser(session || null)

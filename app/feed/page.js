@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { supabase } from '../../lib/supabaseClient'
+import { createClient } from '@/lib/supabase/browser'
 import Link from 'next/link'
 
 export default function FeedPage() {
@@ -9,7 +9,7 @@ export default function FeedPage() {
   const [user, setUser] = useState(null)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
+    createClient().auth.getSession().then(({ data }) => {
       const session = data.session?.user
       setUser(session || null)
       if (!session) window.location.href = '/login'
