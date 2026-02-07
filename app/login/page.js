@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { createClient } from '@/lib/supabase/browser'
 import { useRouter } from 'next/navigation'
 import { isAllowedEmail } from '@/lib/allowedUsers'
@@ -10,18 +10,6 @@ export default function Login() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const router = useRouter()
-
-  useEffect(() => {
-    const supabase = createClient()
-
-    // Check if already logged in
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) {
-        console.log('Already logged in, redirecting')
-        router.push('/')
-      }
-    })
-  }, [router])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -50,24 +38,27 @@ export default function Login() {
         throw error
       }
 
-      console.log('Login successful, session:', data.session)
-      console.log('Session user:', data.session?.user?.email)
-      console.log('Access token:', data.session?.access_token?.substring(0, 20) + '...')
+      console.log('Login successful')
       
-      // Wait a moment for session to fully establish
-      await new Promise(resolve => setTimeout(resolve, 500))
-      
-      // Check session was saved
-      const { data: checkData } = await supabase.auth.getSession()
-      console.log('Session check after login:', checkData.session?.user?.email)
-      
-      if (!checkData.session) {
-        throw new Error('Session not established after login')
+      // Call a server action to set the cookie on the server side
+      const response = await fetch('/api/auth/session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to establish server session')
       }
+
+      console.log('Server session established, redirecting...')
       
-      console.log('Redirecting to home...')
-      
-      // Use router.push to trigger middleware properly
+      // Now redirect - server will have the session
       router.push('/')
       router.refresh()
     } catch (err) {
@@ -186,15 +177,6 @@ export default function Login() {
               {loading ? 'Signing in...' : 'Sign In'}
             </button>
           </form>
-          
-          <div style={{
-            marginTop: 16,
-            fontSize: 11,
-            color: '#666',
-            textAlign: 'center',
-          }}>
-            Check browser console (F12) for debug info
-          </div>
         </div>
       </div>
     </div>
