@@ -127,33 +127,30 @@ export default function BriefsPage() {
                       type="button"
                       onClick={() => toggleSection(brief.id, idx)}
                       style={{
+                        all: 'unset',
                         cursor: 'pointer',
+                        display: 'grid',
+                        gridTemplateColumns: '1fr auto',
+                        alignItems: 'center',
+                        gap: 16,
                         padding: 16,
                         background: '#f9f9f9',
                         borderRadius: 8,
-                        border: 'none',
                         borderLeft: `4px solid ${section.color || '#667eea'}`,
                         marginBottom: 8,
                         width: '100%',
+                        fontSize: 16,
+                        fontWeight: 700,
+                        color: '#333',
                         textAlign: 'left',
                       }}
                     >
-                      <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                      }}>
-                        <span style={{
-                          fontSize: 16,
-                          fontWeight: 700,
-                          color: '#333',
-                        }}>
-                          {section.icon} {section.title}
-                        </span>
-                        <span style={{ fontSize: 12, color: '#999' }}>
-                          {expandedSections[`${brief.id}-${idx}`] ? '▲' : '▼'}
-                        </span>
-                      </div>
+                      <span>
+                        {section.icon} {section.title}
+                      </span>
+                      <span style={{ fontSize: 12, color: '#999' }}>
+                        {expandedSections[`${brief.id}-${idx}`] ? '▲' : '▼'}
+                      </span>
                     </button>
 
                     {expandedSections[`${brief.id}-${idx}`] && (
