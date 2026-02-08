@@ -124,17 +124,23 @@ export default function BriefsPage() {
                 {brief.sections && brief.sections.map((section, idx) => (
                   <div key={idx} style={{ marginBottom: 24 }}>
                     <button
+                      type="button"
                       onClick={() => toggleSection(brief.id, idx)}
                       style={{
                         cursor: 'pointer',
                         padding: 16,
                         background: '#f9f9f9',
                         borderRadius: 8,
+                        borderTop: 'none',
+                        borderRight: 'none',
+                        borderBottom: 'none',
                         borderLeft: `4px solid ${section.color || '#667eea'}`,
                         marginBottom: 8,
-                        border: 'none',
                         width: '100%',
                         textAlign: 'left',
+                        WebkitAppearance: 'none',
+                        appearance: 'none',
+                        fontFamily: 'inherit',
                       }}
                     >
                       <h3 style={{
