@@ -5,7 +5,10 @@ export const metadata = {
   description: 'Tim & Jack operational dashboard',
   icons: {
     icon: '/favicon.svg'
-  },
+  }
+}
+
+export const viewport = {
   themeColor: '#00d4ff'
 }
 
@@ -14,7 +17,6 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <head>
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-        <meta name="theme-color" content="#00d4ff" />
       </head>
       <body style={{ 
         margin: 0, 

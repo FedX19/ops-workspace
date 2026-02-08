@@ -1,6 +1,8 @@
+'use client'
+
 import Link from 'next/link'
 
-export default async function HomePage() {
+export default function HomePage() {
   // TEMP: Auth disabled for testing - showing dashboard without login
   return (
     <div style={{
