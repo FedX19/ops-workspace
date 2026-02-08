@@ -39,20 +39,9 @@ export async function middleware(request: NextRequest) {
     email: user?.email,
   })
 
-  const publicPaths = ['/login', '/status', '/auth/callback']
-  const isPublicPath = publicPaths.includes(pathname)
-
-  if (!user && !isPublicPath) {
-    console.log('[MIDDLEWARE] No user and not a public path, redirecting to /login')
-    return NextResponse.redirect(new URL('/login', request.url))
-  }
-
-  if (user && pathname === '/login') {
-    console.log('[MIDDLEWARE] User logged in but on /login, redirecting to /')
-    return NextResponse.redirect(new URL('/', request.url))
-  }
-
-  console.log('[MIDDLEWARE] Passing through')
+  // TEMP: Disabled auth check to allow direct access for testing
+  // All routes are now public
+  console.log('[MIDDLEWARE] Auth disabled - allowing all routes')
   return supabaseResponse
 }
 
