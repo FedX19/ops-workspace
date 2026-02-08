@@ -141,6 +141,8 @@ export default function BriefsPage() {
                         WebkitAppearance: 'none',
                         appearance: 'none',
                         fontFamily: 'inherit',
+                        touchAction: 'manipulation',
+                        WebkitTapHighlightColor: 'rgba(0,0,0,0.1)',
                       }}
                     >
                       <h3 style={{
