@@ -1,7 +1,5 @@
 'use client'
 
-import Link from 'next/link'
-
 export default function HomePage() {
   // TEMP: Auth disabled for testing - showing dashboard without login
   return (
@@ -37,157 +35,157 @@ export default function HomePage() {
           gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
           gap: 24,
         }}>
-          <Link href="/briefs" style={{ textDecoration: 'none' }}>
-            <div style={{
-              background: 'white',
-              borderRadius: 16,
-              padding: 32,
-              cursor: 'pointer',
-              transition: 'all 0.3s',
-              boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
-              transform: 'translateY(0)',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-8px)'
-              e.currentTarget.style.boxShadow = '0 20px 40px rgba(0,0,0,0.3)'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)'
-              e.currentTarget.style.boxShadow = '0 10px 30px rgba(0,0,0,0.2)'
-            }}
-            >
-              <div style={{ fontSize: 40, marginBottom: 16 }}>📋</div>
-              <h2 style={{
-                fontSize: 20,
-                fontWeight: 700,
-                color: '#333',
-                margin: '0 0 8px 0',
-              }}>
-                Daily Briefs
-              </h2>
-              <p style={{
-                fontSize: 14,
-                color: '#666',
-                margin: 0,
-              }}>
-                Strategic intelligence and daily summaries
-              </p>
-            </div>
-          </Link>
+          <button onClick={() => window.location.href = '/briefs'} style={{
+            background: 'white',
+            borderRadius: 16,
+            padding: 32,
+            cursor: 'pointer',
+            transition: 'all 0.3s',
+            boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
+            transform: 'translateY(0)',
+            border: 'none',
+            textAlign: 'left',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-8px)'
+            e.currentTarget.style.boxShadow = '0 20px 40px rgba(0,0,0,0.3)'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)'
+            e.currentTarget.style.boxShadow = '0 10px 30px rgba(0,0,0,0.2)'
+          }}
+          >
+            <div style={{ fontSize: 40, marginBottom: 16 }}>📋</div>
+            <h2 style={{
+              fontSize: 20,
+              fontWeight: 700,
+              color: '#333',
+              margin: '0 0 8px 0',
+            }}>
+              Daily Briefs
+            </h2>
+            <p style={{
+              fontSize: 14,
+              color: '#666',
+              margin: 0,
+            }}>
+              Strategic intelligence and daily summaries
+            </p>
+          </button>
 
-          <Link href="/kanban" style={{ textDecoration: 'none' }}>
-            <div style={{
-              background: 'white',
-              borderRadius: 16,
-              padding: 32,
-              cursor: 'pointer',
-              transition: 'all 0.3s',
-              boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
-              transform: 'translateY(0)',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-8px)'
-              e.currentTarget.style.boxShadow = '0 20px 40px rgba(0,0,0,0.3)'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)'
-              e.currentTarget.style.boxShadow = '0 10px 30px rgba(0,0,0,0.2)'
-            }}
-            >
-              <div style={{ fontSize: 40, marginBottom: 16 }}>📊</div>
-              <h2 style={{
-                fontSize: 20,
-                fontWeight: 700,
-                color: '#333',
-                margin: '0 0 8px 0',
-              }}>
-                Kanban Board
-              </h2>
-              <p style={{
-                fontSize: 14,
-                color: '#666',
-                margin: 0,
-              }}>
-                Track tasks and workflow progress
-              </p>
-            </div>
-          </Link>
+          <button onClick={() => window.location.href = '/kanban'} style={{
+            background: 'white',
+            borderRadius: 16,
+            padding: 32,
+            cursor: 'pointer',
+            transition: 'all 0.3s',
+            boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
+            transform: 'translateY(0)',
+            border: 'none',
+            textAlign: 'left',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-8px)'
+            e.currentTarget.style.boxShadow = '0 20px 40px rgba(0,0,0,0.3)'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)'
+            e.currentTarget.style.boxShadow = '0 10px 30px rgba(0,0,0,0.2)'
+          }}
+          >
+            <div style={{ fontSize: 40, marginBottom: 16 }}>📊</div>
+            <h2 style={{
+              fontSize: 20,
+              fontWeight: 700,
+              color: '#333',
+              margin: '0 0 8px 0',
+            }}>
+              Kanban Board
+            </h2>
+            <p style={{
+              fontSize: 14,
+              color: '#666',
+              margin: 0,
+            }}>
+              Track tasks and workflow progress
+            </p>
+          </button>
 
-          <Link href="/approvals" style={{ textDecoration: 'none' }}>
-            <div style={{
-              background: 'white',
-              borderRadius: 16,
-              padding: 32,
-              cursor: 'pointer',
-              transition: 'all 0.3s',
-              boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
-              transform: 'translateY(0)',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-8px)'
-              e.currentTarget.style.boxShadow = '0 20px 40px rgba(0,0,0,0.3)'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)'
-              e.currentTarget.style.boxShadow = '0 10px 30px rgba(0,0,0,0.2)'
-            }}
-            >
-              <div style={{ fontSize: 40, marginBottom: 16 }}>✅</div>
-              <h2 style={{
-                fontSize: 20,
-                fontWeight: 700,
-                color: '#333',
-                margin: '0 0 8px 0',
-              }}>
-                Approvals
-              </h2>
-              <p style={{
-                fontSize: 14,
-                color: '#666',
-                margin: 0,
-              }}>
-                Decision gates and approval workflows
-              </p>
-            </div>
-          </Link>
+          <button onClick={() => window.location.href = '/approvals'} style={{
+            background: 'white',
+            borderRadius: 16,
+            padding: 32,
+            cursor: 'pointer',
+            transition: 'all 0.3s',
+            boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
+            transform: 'translateY(0)',
+            border: 'none',
+            textAlign: 'left',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-8px)'
+            e.currentTarget.style.boxShadow = '0 20px 40px rgba(0,0,0,0.3)'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)'
+            e.currentTarget.style.boxShadow = '0 10px 30px rgba(0,0,0,0.2)'
+          }}
+          >
+            <div style={{ fontSize: 40, marginBottom: 16 }}>✅</div>
+            <h2 style={{
+              fontSize: 20,
+              fontWeight: 700,
+              color: '#333',
+              margin: '0 0 8px 0',
+            }}>
+              Approvals
+            </h2>
+            <p style={{
+              fontSize: 14,
+              color: '#666',
+              margin: 0,
+            }}>
+              Decision gates and approval workflows
+            </p>
+          </button>
 
-          <Link href="/feed" style={{ textDecoration: 'none' }}>
-            <div style={{
-              background: 'white',
-              borderRadius: 16,
-              padding: 32,
-              cursor: 'pointer',
-              transition: 'all 0.3s',
-              boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
-              transform: 'translateY(0)',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-8px)'
-              e.currentTarget.style.boxShadow = '0 20px 40px rgba(0,0,0,0.3)'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)'
-              e.currentTarget.style.boxShadow = '0 10px 30px rgba(0,0,0,0.2)'
-            }}
-            >
-              <div style={{ fontSize: 40, marginBottom: 16 }}>📰</div>
-              <h2 style={{
-                fontSize: 20,
-                fontWeight: 700,
-                color: '#333',
-                margin: '0 0 8px 0',
-              }}>
-                Activity Feed
-              </h2>
-              <p style={{
-                fontSize: 14,
-                color: '#666',
-                margin: 0,
-              }}>
-                Real-time updates and event logs
-              </p>
-            </div>
-          </Link>
+          <button onClick={() => window.location.href = '/feed'} style={{
+            background: 'white',
+            borderRadius: 16,
+            padding: 32,
+            cursor: 'pointer',
+            transition: 'all 0.3s',
+            boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
+            transform: 'translateY(0)',
+            border: 'none',
+            textAlign: 'left',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-8px)'
+            e.currentTarget.style.boxShadow = '0 20px 40px rgba(0,0,0,0.3)'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)'
+            e.currentTarget.style.boxShadow = '0 10px 30px rgba(0,0,0,0.2)'
+          }}
+          >
+            <div style={{ fontSize: 40, marginBottom: 16 }}>📰</div>
+            <h2 style={{
+              fontSize: 20,
+              fontWeight: 700,
+              color: '#333',
+              margin: '0 0 8px 0',
+            }}>
+              Activity Feed
+            </h2>
+            <p style={{
+              fontSize: 14,
+              color: '#666',
+              margin: 0,
+            }}>
+              Real-time updates and event logs
+            </p>
+          </button>
         </div>
       </div>
     </div>
