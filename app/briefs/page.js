@@ -123,7 +123,7 @@ export default function BriefsPage() {
                 {/* Interactive Sections */}
                 {brief.sections && brief.sections.map((section, idx) => (
                   <div key={idx} style={{ marginBottom: 24 }}>
-                    <div
+                    <button
                       onClick={() => toggleSection(brief.id, idx)}
                       style={{
                         cursor: 'pointer',
@@ -132,6 +132,9 @@ export default function BriefsPage() {
                         borderRadius: 8,
                         borderLeft: `4px solid ${section.color || '#667eea'}`,
                         marginBottom: 8,
+                        border: 'none',
+                        width: '100%',
+                        textAlign: 'left',
                       }}
                     >
                       <h3 style={{
@@ -148,7 +151,7 @@ export default function BriefsPage() {
                           {expandedSections[`${brief.id}-${idx}`] ? '▲' : '▼'}
                         </span>
                       </h3>
-                    </div>
+                    </button>
 
                     {expandedSections[`${brief.id}-${idx}`] && (
                       <div style={{
