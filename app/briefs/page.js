@@ -141,24 +141,22 @@ export default function BriefsPage() {
                         WebkitAppearance: 'none',
                         appearance: 'none',
                         fontFamily: 'inherit',
-                        touchAction: 'manipulation',
-                        WebkitTapHighlightColor: 'rgba(0,0,0,0.1)',
-                      }}
-                    >
-                      <h3 style={{
-                        margin: 0,
                         fontSize: 16,
                         fontWeight: 700,
                         color: '#333',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
-                      }}>
+                        touchAction: 'manipulation',
+                        WebkitTapHighlightColor: 'rgba(0,0,0,0.1)',
+                      }}
+                    >
+                      <span style={{ pointerEvents: 'none' }}>
                         {section.icon} {section.title}
-                        <span style={{ fontSize: 12, color: '#999' }}>
-                          {expandedSections[`${brief.id}-${idx}`] ? '▲' : '▼'}
-                        </span>
-                      </h3>
+                      </span>
+                      <span style={{ fontSize: 12, color: '#999', pointerEvents: 'none' }}>
+                        {expandedSections[`${brief.id}-${idx}`] ? '▲' : '▼'}
+                      </span>
                     </button>
 
                     {expandedSections[`${brief.id}-${idx}`] && (
