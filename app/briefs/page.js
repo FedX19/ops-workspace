@@ -131,32 +131,29 @@ export default function BriefsPage() {
                         padding: 16,
                         background: '#f9f9f9',
                         borderRadius: 8,
-                        borderTop: 'none',
-                        borderRight: 'none',
-                        borderBottom: 'none',
+                        border: 'none',
                         borderLeft: `4px solid ${section.color || '#667eea'}`,
                         marginBottom: 8,
                         width: '100%',
                         textAlign: 'left',
-                        WebkitAppearance: 'none',
-                        appearance: 'none',
-                        fontFamily: 'inherit',
-                        fontSize: 16,
-                        fontWeight: 700,
-                        color: '#333',
+                      }}
+                    >
+                      <div style={{
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
-                        touchAction: 'manipulation',
-                        WebkitTapHighlightColor: 'rgba(0,0,0,0.1)',
-                      }}
-                    >
-                      <span style={{ pointerEvents: 'none' }}>
-                        {section.icon} {section.title}
-                      </span>
-                      <span style={{ fontSize: 12, color: '#999', pointerEvents: 'none' }}>
-                        {expandedSections[`${brief.id}-${idx}`] ? '▲' : '▼'}
-                      </span>
+                      }}>
+                        <span style={{
+                          fontSize: 16,
+                          fontWeight: 700,
+                          color: '#333',
+                        }}>
+                          {section.icon} {section.title}
+                        </span>
+                        <span style={{ fontSize: 12, color: '#999' }}>
+                          {expandedSections[`${brief.id}-${idx}`] ? '▲' : '▼'}
+                        </span>
+                      </div>
                     </button>
 
                     {expandedSections[`${brief.id}-${idx}`] && (
